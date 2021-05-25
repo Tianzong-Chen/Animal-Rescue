@@ -1,0 +1,143 @@
+SQL Queries we used in this project: 
+
+## About Page: 
+
+SELECT Count(*) FROM Branch;
+
+SELECT * FROM Branch;
+
+** Nested aggregation with Group By: **
+** Find the largest capacity of each dorm type for each branch with at least 2 dorms (of any capacity). **
+SELECT D1.Branch_Number, D1.Dorm_Type, MAX(D1.Capacity) AS M
+    FROM Dorm_Offer D1
+    GROUP BY D1.Branch_Number, D1.Dorm_Type
+    HAVING 1 < (SELECT COUNT(*)
+                FROM Dorm_Offer D2
+                WHERE D1.Branch_Number = D2.Branch_Number)
+    ORDER BY D1.Branch_Number;
+
+SELECT Branch_Number
+    FROM Branch 
+    WHERE Branch_Number=" . $branch_number;      
+
+SELECT *
+    FROM DONATE 
+    WHERE donor_sin='" . $donorsin. "' AND branch_number = 1;         
+
+UPDATE Donate
+    SET Branch_Number = 1
+    WHERE Donate.donor_sin = '" .$donorsin. "' AND Donate.branch_number = " .$branch_number;    
+
+
+UPDATE Donate
+    SET Amount = " .$newValue. " WHERE donor_sin = '" .$donorsin. 
+    "' AND branch_number = 1";
+
+DELETE FROM Donate
+    WHERE branch_number = ".$branch_number. " AND donor_sin = '" .$donorsin. "';    
+
+
+SELECT *
+    FROM DONATE 
+    WHERE Branch_Number=" . $branch_number;
+
+
+DELETE FROM Branch 
+    WHERE Branch_Number=" . $branch_number;   
+
+** we use three UPDATEs after a DELETE is because Oracle does not support "on update cascade" . **
+UPDATE Employee_Work
+    SET Branch_Number = 1
+    WHERE Employee_Work.Branch_Number is null;
+
+UPDATE Pet_Adopt_Live
+    SET Branch_Number = 1
+    WHERE Pet_Adopt_Live.Branch_Number is null;
+
+UPDATE Pet_Adopt_Live
+    SET Dorm_Number = 1
+    WHERE Pet_Adopt_Live.Dorm_Number is null;   
+** -------------------------------------------------------------------------------------------- **
+
+## Adoption Page: 
+
+** Aggregation with Having: Find all adopters who have adopted more than one pet. **
+** (Pet_Adopt_Live, Adopter_Contact tables) **
+SELECT A.Adopter_Name, P.Adopter_SIN, COUNT(*) AS NUM
+    FROM Pet_Adopt_Live P INNER JOIN Adopter_Contact A
+    ON P.Adopter_SIN = A.Adopter_SIN 
+    GROUP BY P.Adopter_SIN, A.Adopter_Name
+    HAVING COUNT(*) > 1;
+
+** Aggregation with Having: Find all branches which have more than one pet being adopted. **
+** (Pet_Adopt_Live, Adopter_Contact tables) **
+SELECT branch_number, count(*) as NUM 
+    FROM pet_adopt_live 
+    WHERE adopter_sin is not NULL 
+    GROUP BY branch_number 
+    HAVING count(*) > 1;    
+
+## Donation Page:
+
+** Update: The amount of money donated by the donor with SIN number $SIN_number **
+** in branch $branch_number1 from $old_value to $new_value. (Donate Table) **
+UPDATE Donate 
+    SET Amount='" . $new_value . "' 
+    WHERE Amount='" . $old_value . "'
+        AND Donor_SIN='" . $SIN_number . "' 
+        AND Branch_Number='" . $branch_number1 . "';
+
+SELECT Count(*) 
+    FROM Donate 
+    WHERE Amount='" . $new_value . "'
+        AND Donor_SIN='" . $SIN_number . "' 
+        AND Branch_Number='" . $branch_number1 . "';
+
+
+INSERT INTO Donor values (Phone_Number, Donor_SIN, Email, Donor_Name)
+       VALUES ('$insPN', '$insSIN', '$insEmail', '$insDN');
+
+
+
+** Aggregation: Find the min, max, average of amount of money donated in each branch (Donate Table) **
+SELECT Branch_Number,
+    MIN(Amount) AS MIN_AMOUNT,
+    MAX(Amount) AS MAX_AMOUNT,
+    AVG(Amount) AS AVG_AMOUNT
+FROM Donate 
+GROUP BY Branch_Number;
+
+
+## Pet Page: 
+
+SELECT p.pet_id, p.pet_name, dp.disability_type, dt.additional_care_type
+    FROM pet_adopt_live p, disabled_pet dp, disability_type dt
+    WHERE p.pet_id = dp.pet_id AND dp.disability_type = dt.disability_type;
+
+** Join: Find the pets who need to take a wheelchair (Pet_Adopt_Live, Disabled_Pet, Disability_Type table)**
+SELECT p.pet_id, p.pet_name, dp.disability_type, dt.additional_care_type
+    FROM pet_adopt_live p, disabled_pet dp, disability_type dt
+    WHERE p.pet_id = dp.pet_id AND dp.disability_type = dt.disability_type
+    AND dt.additional_care_type = '" .$_GET["disable_type"]. "';    
+
+** Select: All pets that are dogs/cats (Pet_Adopt_Live table) **
+SELECT * FROM pet_adopt_live WHERE species='" .$_GET["species"]. "';
+
+** Project: Find id, name, email, skills for all trainers (Trainer, and Emplyee_Work tables) **
+SELECT " .$name. " " .$id. " " .$email. " " .$skill. " 
+FROM trainer t, employee_work e 
+WHERE t.employee_sin = e.employee_sin;
+
+** Division: Find all pets who have taken all training courses (Pet_Adopt_Live, Train, Trainer tables) **
+SELECT p.pet_id, p.pet_name
+FROM pet_adopt_live p
+WHERE NOT EXISTS (SELECT *
+                  FROM trainer tr
+                  WHERE NOT EXISTS (SELECT * 
+                                    FROM train t1
+                                    WHERE t1.pet_id = p.pet_id 
+                                    AND t1.employee_sin = tr.employee_sin));
+
+
+
+
